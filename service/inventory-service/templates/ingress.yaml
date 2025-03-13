@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Release.Name }}-ingress
+  namespace: wms
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /api/inventory$1
+    nginx.ingress.kubernetes.io/enable-cors: "true"  # 필요시 추가
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: api.sol-wms.store  # 특정 호스트 명시
+    http:
+      paths:
+      - path: /api/inventory(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ .Release.Name }}
+            port:
+              number: {{ .Values.service.port }}
+

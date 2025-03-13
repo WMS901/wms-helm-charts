@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "mongo-outbound.fullname" . }}
+spec:
+  serviceName: {{ include "mongo-outbound.fullname" . }}
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "mongo-outbound.fullname" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "mongo-outbound.fullname" . }}
+    spec:
+      containers:
+        - name: mongo
+          image: mongo:6.0
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              value: "user1"
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              value: "user1"
+            - name: MONGO_INITDB_DATABASE
+              value: "outbound_db"
+          ports:
+            - containerPort: 27018
+          volumeMounts:
+            - name: mongo-storage
+              mountPath: /data/db
+      volumes:
+        - name: mongo-storage
+          persistentVolumeClaim:
+            claimName: mongo-outbound-pvc

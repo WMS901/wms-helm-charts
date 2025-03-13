@@ -1,0 +1,37 @@
+# Docker 이미지 설정
+image:
+  repository: chamchimayo/inventory-service  # Docker Hub 레포지토리명
+  tag: "1.0.1"
+  pullPolicy: IfNotPresent
+
+# 서비스 설정
+service:
+  type: ClusterIP
+  port: 1040
+
+# Ingress 설정
+ingress:
+  enabled: true
+  annotations: {}
+  hosts:
+    - host: inventory.example.com
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+
+# 리소스 요청 및 제한
+resources:
+  limits:
+    cpu: "500m"
+    memory: "512Mi"
+  requests:
+    cpu: "250m"
+    memory: "256Mi"
+
+env:
+  SERVER_PORT: 1040
+  DB_URL: jdbc:postgresql://postgres-inventory.postgres:5432/wms_inventory
+  DB_USERNAME: user1
+  DB_PASSWORD: user1
+  DB_DRIVER: org.postgresql.Driver

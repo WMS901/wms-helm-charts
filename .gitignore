@@ -1,0 +1,11 @@
+*.log
+user-service
+*.tmp
+.DS_Store
+.idea/
+.vscode/
+node_modules/
+charts/
+SSL
+cloudflared
+user-service-ex
