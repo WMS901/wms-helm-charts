@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluent-bit
+  namespace: amazon-cloudwatch
+spec:
+  selector:
+    matchLabels:
+      app: fluent-bit
+  template:
+    metadata:
+      labels:
+        app: fluent-bit
+    spec:
+      serviceAccountName: monitoring  # 서비스 계정 연결
+      securityContext:
+        fsGroup: 0  # Pod 수준에서 fsGroup을 설정
+      containers:
+        - name: fluent-bit
+          image: amazon/aws-for-fluent-bit:latest
+          env:
+            - name: AWS_ACCESS_KEY_ID
+              value: "AKIA34AMDDJLFTNAAK7D"
+            - name: AWS_SECRET_ACCESS_KEY
+              value: "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"
+            - name: AWS_DEFAULT_REGION
+              value: "us-east-1"
+          securityContext:
+            runAsUser: 0  # root 사용자로 실행 (권한 문제 해결)
+            runAsGroup: 0  # root 그룹으로 실행
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/fluent-bit/fluent-bit.conf
+              subPath: fluent-bit.conf
+            - name: filter-lua-volume
+              mountPath: /etc/fluent-bit/filter.lua
+              subPath: filter.lua
+            - name: filter-old-lua-volume
+              mountPath: /etc/fluent-bit/filter_old.lua
+              subPath: filter_old.lua
+            - name: varlog
+              mountPath: /var/log/containers # Fluent Bit 컨테이너에서 로그를 읽을 경로
+            - name: varlog-pods
+              mountPath: /var/log/pods
+          command: ["/fluent-bit/bin/fluent-bit"]
+          args:
+            - -c
+            - /etc/fluent-bit/fluent-bit.conf
+      volumes:
+        - name: config-volume
+          configMap:
+            name: fluent-bit-config
+            items:
+              - key: fluent-bit.conf
+                path: fluent-bit.conf
+        - name: varlog
+          hostPath:
+            path: /var/log/containers       # 호스트 시스템의 로그 파일 경로
+            type: DirectoryOrCreate              # 경로가 디렉토리임을 지정
+        - name: varlog-pods
+          hostPath:
+            path: /var/log/pods
+            type: DirectoryOrCreate
+        - name: filter-lua-volume
+          configMap:
+            name: fluent-bit-config
+            items:
+              - key: filter.lua
+                path: filter.lua
+        - name: filter-old-lua-volume
+          configMap:
+            name: fluent-bit-config
+            items:
+              - key: filter_old.lua
+                path: filter_old.lua
+
