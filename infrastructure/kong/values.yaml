@@ -1,0 +1,58 @@
+# Kong 기본 설정
+replicaCount: 2
+
+# **📌 PostgreSQL 제거**
+postgresql:
+  enabled: false  # ✅ PostgreSQL 설치하지 않도록 변경
+
+# Kong 데이터베이스 설정 (DBless 모드)
+database:
+  enabled: false  # ✅ PostgreSQL 비활성화
+  type: "off"  # ✅ DB 없이 실행
+
+# Kong 서비스 설정
+proxy:
+  type: ClusterIP
+  http:
+    enabled: true
+    servicePort: 80
+    containerPort: 8000
+  https:
+    enabled: true
+    servicePort: 443
+    containerPort: 8443
+
+admin:
+  enabled: false  # ✅ Admin API 사용 안함 (DBless 모드)
+
+# Kong 환경 변수 (DB 없이 실행)
+extraEnvVars:
+  - name: KONG_DATABASE
+    value: "off"  # ✅ DB 없이 실행
+  - name: KONG_DECLARATIVE_CONFIG
+    value: "/opt/kong/kong.yml"  # ✅ ConfigMap에서 설정 로드
+
+# Kong Ingress 설정
+ingressController:
+  enabled: true
+  installCRDs: false
+  ingressClassName: "nginx"
+  admin:
+    enabled: false
+  proxy:
+    enabled: true
+    annotations:
+      nginx.ingress.kubernetes.io/rewrite-target: "/"
+    tls:
+      enabled: true
+      secretName: kong-tls
+    hosts:
+      - api.sol-wms.store
+
+# Kafka 연동 설정 (JWT 인증 이벤트 처리)
+kafka:
+  enabled: true
+  bootstrapServers: "my-cluster-kafka-0.kafka.svc.cluster.local:9092,my-cluster-kafka-1.kafka.svc.cluster.local:9092"
+  topic: "kong_jwt_events"
+  securityProtocol: "PLAINTEXT"
+

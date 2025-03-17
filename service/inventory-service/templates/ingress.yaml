@@ -16,7 +16,7 @@ spec:
   tls:
   - hosts:
       - api.sol-wms.store
-    secretName: letsencrypt-cert  #Secret 변 경 함
+    secretName: letsencrypt-cert
   rules:
   - host: api.sol-wms.store
     http:
@@ -28,4 +28,3 @@ spec:
             name: inventory-service
             port:
               number: 1040
-
