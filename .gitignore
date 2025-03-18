@@ -1,5 +1,4 @@
 *.log
-user-service
 *.tmp
 .DS_Store
 .idea/

@@ -1,0 +1,53 @@
+replicaCount: 1
+
+image:
+  repository: chamchimayo/user-service
+  tag: "v1.0.1"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 1041
+
+env:
+  SERVER_PORT:
+    valueFrom:
+      secretKeyRef:
+        name: user-service-secret
+        key: SERVER_PORT
+  DB_URL:
+    valueFrom:
+      secretKeyRef:
+        name: user-service-secret
+        key: DB_URL
+  DB_USERNAME:
+    valueFrom:
+      secretKeyRef:
+        name: user-service-secret
+        key: DB_USERNAME
+  DB_PASSWORD:
+    valueFrom:
+      secretKeyRef:
+        name: user-service-secret
+        key: DB_PASSWORD
+  DB_DRIVER:
+    valueFrom:
+      secretKeyRef:
+        name: user-service-secret
+        key: DB_DRIVER
+  REDIS_HOST:
+    valueFrom:
+      secretKeyRef:
+        name: user-service-secret
+        key: REDIS_HOST
+  REDIS_PORT:
+    valueFrom:
+      secretKeyRef:
+        name: user-service-secret
+        key: REDIS_PORT
+  REDIS_PASSWORD:
+    valueFrom:
+      secretKeyRef:
+        name: user-service-secret
+        key: REDIS_PASSWORD
+

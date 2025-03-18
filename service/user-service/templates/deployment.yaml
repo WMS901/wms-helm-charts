@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-service
+  namespace: wms
+  labels:
+    app: user-service
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: user-service
+  template:
+    metadata:
+      labels:
+        app: user-service
+    spec:
+      containers:
+        - name: user-service
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 1041
+          env:
+            - name: SERVER_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: user-service-secret
+                  key: SERVER_PORT
+            - name: DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: user-service-secret
+                  key: DB_URL
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: user-service-secret
+                  key: DB_USERNAME
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: user-service-secret
+                  key: DB_PASSWORD
+            - name: DB_DRIVER
+              valueFrom:
+                secretKeyRef:
+                  name: user-service-secret
+                  key: DB_DRIVER
+            - name: REDIS_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: user-service-secret
+                  key: REDIS_HOST
+            - name: REDIS_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: user-service-secret
+                  key: REDIS_PORT
+
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: user-service-secret
+                  key: REDIS_PASSWORD

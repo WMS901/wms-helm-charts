@@ -1,0 +1,36 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: "{{ .Release.Name }}-ingress"
+  namespace: wms
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: $1
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://api.sol-wms.store"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - api.sol-wms.store
+      secretName: cloudflare-cert
+  rules:
+    - host: api.sol-wms.store
+      http:
+        paths:
+          - path: /api/users/signup
+            pathType: Prefix
+            backend:
+              service:
+                name: "{{ .Release.Name }}"
+                port:
+                  number: {{ .Values.service.port }}
+
+          - path: /api/users/login
+            pathType: Prefix
+            backend:
+              service:
+                name: "{{ .Release.Name }}"
+                port:
+                  number: {{ .Values.service.port }}
+
