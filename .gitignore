@@ -8,3 +8,4 @@ charts/
 SSL
 cloudflared
 user-service-ex
+service/user-service/user-service-secret.yaml
