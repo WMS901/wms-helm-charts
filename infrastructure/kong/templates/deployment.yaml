@@ -17,6 +17,9 @@ spec:
         - name: kong-config
           configMap:
             name: kong-config
+        - name: kong-cert
+          secret:
+            secretName: kong-tls  # ✅ Secret에서 TLS 인증서 가져오기
       containers:
         - name: kong
           image: kong/kong-gateway:3.6
@@ -31,6 +34,10 @@ spec:
               value: "0.0.0.0:8001"
             - name: KONG_STATUS_LISTEN
               value: "0.0.0.0:8100"
+            - name: KONG_SSL_CERT
+              value: "/etc/kong/ssl/tls.crt"  # ✅ Secret 마운트된 인증서 사용
+            - name: KONG_SSL_CERT_KEY
+              value: "/etc/kong/ssl/tls.key"  # ✅ Secret 마운트된 키 사용
             - name: KONG_PLUGINS
               value: "bundled, jwt, kafka-log, prometheus"
             - name: KONG_LOG_LEVEL
@@ -51,6 +58,9 @@ spec:
             - name: kong-config
               mountPath: /opt/kong/kong.yml
               subPath: kong.yml
+            - name: kong-cert
+              mountPath: /etc/kong/ssl  # ✅ Secret 마운트된 인증서 위치
+              readOnly: true
           ports:
             - name: proxy
               containerPort: 8000

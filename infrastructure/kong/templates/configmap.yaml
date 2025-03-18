@@ -8,13 +8,13 @@ data:
     _format_version: "3.0"
     services:
       - name: inventory-service
-        url: http://inventory-service.default.svc.cluster.local:8080
+        url: http://inventory-service.wms.svc.cluster.local:1040
         routes:
           - name: inventory-api
             paths:
               - /api/inventory
       - name: user-service
-        url: http://user-service.default.svc.cluster.local:8080
+        url: http://user-service.wms.svc.cluster.local:1041
         routes:
           - name: user-api
             paths:
@@ -24,3 +24,4 @@ data:
         config:
           key_claim_name: "iss"
           secret_is_base64: false
+

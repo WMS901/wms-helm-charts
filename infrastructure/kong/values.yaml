@@ -1,14 +1,14 @@
 # Kong 기본 설정
 replicaCount: 2
 
-# **📌 PostgreSQL 제거**
+# PostgreSQL 제거
 postgresql:
-  enabled: false  # ✅ PostgreSQL 설치하지 않도록 변경
+  enabled: false  # ✅ PostgreSQL 비활성화
 
 # Kong 데이터베이스 설정 (DBless 모드)
 database:
-  enabled: false  # ✅ PostgreSQL 비활성화
-  type: "off"  # ✅ DB 없이 실행
+  enabled: false
+  type: "off"
 
 # Kong 서비스 설정
 proxy:
@@ -23,14 +23,18 @@ proxy:
     containerPort: 8443
 
 admin:
-  enabled: false  # ✅ Admin API 사용 안함 (DBless 모드)
+  enabled: false  # ✅ Admin API 사용 안함
 
 # Kong 환경 변수 (DB 없이 실행)
 extraEnvVars:
   - name: KONG_DATABASE
-    value: "off"  # ✅ DB 없이 실행
+    value: "off"
   - name: KONG_DECLARATIVE_CONFIG
-    value: "/opt/kong/kong.yml"  # ✅ ConfigMap에서 설정 로드
+    value: "/opt/kong/kong.yml"
+  - name: KONG_SSL_CERT
+    value: "/etc/kong/ssl/tls.crt"  # ✅ Secret을 통한 인증서 적용
+  - name: KONG_SSL_CERT_KEY
+    value: "/etc/kong/ssl/tls.key"  # ✅ Secret을 통한 키 적용
 
 # Kong Ingress 설정
 ingressController:
