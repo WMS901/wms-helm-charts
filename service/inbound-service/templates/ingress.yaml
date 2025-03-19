@@ -9,7 +9,7 @@ metadata:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, OPTIONS"
     nginx.ingress.kubernetes.io/cors-allow-headers: "Authorization, Content-Type"
-    nginx.ingress.kubernetes.io/rewrite-target: "/api/inbound"
+    #nginx.ingress.kubernetes.io/rewrite-target: "/api/inbound"
     nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
 spec:
   ingressClassName: nginx
@@ -27,4 +27,4 @@ spec:
           service:
             name: inbound-service
             port:
-              number: 3000
+              number: 1050

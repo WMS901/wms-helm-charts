@@ -1,0 +1,123 @@
+daemonset:
+  enabled: true
+
+deployment:
+  enabled: false
+
+metricbeatConfig:
+  metricbeat.yml: |
+    metricbeat.modules:
+      - module: kubernetes
+        enabled: true
+        metricsets:
+          - node
+          - system
+          - pod
+          - container
+          - volume
+          - event
+          - state_node
+          - state_deployment
+          - state_replicaset
+          - state_statefulset
+          - state_pod
+          - state_container
+        period: 10s
+        hosts: ["kube-state-metrics:8080"]
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        ssl.verification_mode: "none"
+
+      - module: system
+        enabled: true
+        period: 10s
+        metricsets:
+          - cpu
+          - load
+          - memory
+          - network
+          - process
+          - process_summary
+          - uptime
+        processes: ['.*']
+        process.include_top_n:
+          by_cpu: 5
+          by_memory: 5
+
+    processors:
+      - add_fields:
+          target: fields
+          fields:
+            beat_type: metricbeat
+
+    output.logstash:
+      hosts: ["195.168.9.181:5044"]
+
+elasticsearch:
+  enabled: false
+
+securityContext:
+  runAsUser: 0
+  privileged: false
+  runAsGroup: 0
+  fsGroup: 0
+
+resources:
+  requests:
+    cpu: "100m"
+    memory: "100Mi"
+  limits:
+    cpu: "500m"
+    memory: "512Mi"
+
+managedServiceAccount: true
+serviceAccount: ""
+
+image: "docker.elastic.co/beats/metricbeat"
+imageTag: "8.5.1"
+imagePullPolicy: "IfNotPresent"
+
+livenessProbe:
+  exec:
+    command:
+      - sh
+      - -c
+      - |
+        #!/usr/bin/env bash -e
+        metricbeat test output
+  initialDelaySeconds: 30
+  periodSeconds: 30
+
+readinessProbe:
+  exec:
+    command:
+      - sh
+      - -c
+      - |
+        #!/usr/bin/env bash -e
+        metricbeat test output
+  initialDelaySeconds: 20
+  periodSeconds: 30
+
+clusterRoleRules:
+  - apiGroups: [""]
+    resources:
+      - nodes
+      - namespaces
+      - pods
+      - events
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources:
+      - deployments
+      - replicasets
+      - statefulsets
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["batch"]
+    resources:
+      - jobs
+      - cronjobs
+    verbs: ["get", "list", "watch"]
+
+kube_state_metrics:
+  enabled: true
+

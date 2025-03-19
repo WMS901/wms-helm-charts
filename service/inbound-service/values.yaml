@@ -2,15 +2,15 @@ replicaCount: 1
 
 image:
   repository: chamchimayo/inbound-service
-  tag: "v0.0.1"
+  tag: "v1.0.4"
   pullPolicy: IfNotPresent
 
 service:
   type: ClusterIP
-  port: 3000
+  port: 1050
 
 env:
-  SERVER_PORT: 3000
+  SERVER_PORT: 1050
   MONGO_HOST: mongo-inbound.mongo.svc.cluster.local  #ip -> DNS 기반 서비스 이름 사용
   MONGO_PORT: 27017
   MONGO_USER: user1

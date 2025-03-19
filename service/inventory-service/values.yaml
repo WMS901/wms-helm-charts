@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: chamchimayo/inventory-service
-  tag: "1.0.1"
+  tag: "v1.0.10"
   pullPolicy: IfNotPresent
 
 service:
@@ -15,3 +15,12 @@ env:
   DB_USERNAME: user1
   DB_PASSWORD: user1
   DB_DRIVER: org.postgresql.Driver
+
+  # Kafka 설정 추가
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: "my-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092"
+  SPRING_KAFKA_CONSUMER_GROUP_ID: "inventory-group"
+  SPRING_KAFKA_CONSUMER_AUTO_OFFSET_RESET: "earliest"
+  SPRING_KAFKA_CONSUMER_KEY_DESERIALIZER: "org.apache.kafka.common.serialization.StringDeserializer"
+  SPRING_KAFKA_CONSUMER_VALUE_DESERIALIZER: "org.springframework.kafka.support.serializer.JsonDeserializer"
+  SPRING_KAFKA_CONSUMER_PROPERTIES_SPRING_JSON_TRUSTED_PACKAGES: "*"
+

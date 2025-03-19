@@ -15,6 +15,6 @@ env:
   DB_USERNAME: user1
   DB_PASSWORD: user1
   DB_DRIVER: org.postgresql.Driver
-  REDIS_CLUSTER_NODES: "redis-cluster-0.redis-cluster.redis.svc.cluster.local,redis-cluster-1.redis-cluster.redis.svc.cluster.local,redis-cluster-2.redis-cluster.redis.svc.cluster.local,redis-cluster-3.redis-cluster.redis.svc.cluster.local,redis-cluster-4.redis-cluster.redis.svc.cluster.local,redis-cluster-5.redis-cluster.redis.svc.cluster.local"
-  REDIS_PASSWORD: user1
+  REDIS_CLUSTER_NODES: redis-cluster-headless.redis.svc.cluster.local:6379
+  REDIS_PASSWORD: YLVGtPhO7s
   REDIS_PORT: 6379
