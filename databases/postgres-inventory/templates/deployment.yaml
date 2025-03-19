@@ -28,7 +28,7 @@ spec:
           volumeMounts:
             - name: postgres-storage
               mountPath: /var/lib/postgresql/data
-      volumes:  # ✅ 기존 PVC를 직접 참조하여 사용
+      volumes:
         - name: postgres-storage
           persistentVolumeClaim:
-            claimName: postgres-inventory-pvc  # ✅ 기존 PVC 사용
+            claimName: postgres-inventory-pvc

@@ -10,44 +10,11 @@ service:
   port: 1041
 
 env:
-  SERVER_PORT:
-    valueFrom:
-      secretKeyRef:
-        name: user-service-secret
-        key: SERVER_PORT
-  DB_URL:
-    valueFrom:
-      secretKeyRef:
-        name: user-service-secret
-        key: DB_URL
-  DB_USERNAME:
-    valueFrom:
-      secretKeyRef:
-        name: user-service-secret
-        key: DB_USERNAME
-  DB_PASSWORD:
-    valueFrom:
-      secretKeyRef:
-        name: user-service-secret
-        key: DB_PASSWORD
-  DB_DRIVER:
-    valueFrom:
-      secretKeyRef:
-        name: user-service-secret
-        key: DB_DRIVER
-  REDIS_HOST:
-    valueFrom:
-      secretKeyRef:
-        name: user-service-secret
-        key: REDIS_HOST
-  REDIS_PORT:
-    valueFrom:
-      secretKeyRef:
-        name: user-service-secret
-        key: REDIS_PORT
-  REDIS_PASSWORD:
-    valueFrom:
-      secretKeyRef:
-        name: user-service-secret
-        key: REDIS_PASSWORD
-
+  SERVER_PORT: 1041
+  DB_URL: jdbc:postgresql://postgres-user.postgres:5433/user_db
+  DB_USERNAME: user1
+  DB_PASSWORD: user1
+  DB_DRIVER: org.postgresql.Driver
+  REDIS_CLUSTER_NODES: "redis-cluster-0.redis-cluster.redis.svc.cluster.local,redis-cluster-1.redis-cluster.redis.svc.cluster.local,redis-cluster-2.redis-cluster.redis.svc.cluster.local,redis-cluster-3.redis-cluster.redis.svc.cluster.local,redis-cluster-4.redis-cluster.redis.svc.cluster.local,redis-cluster-5.redis-cluster.redis.svc.cluster.local"
+  REDIS_PASSWORD: user1
+  REDIS_PORT: 6379

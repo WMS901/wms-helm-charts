@@ -19,8 +19,16 @@ data:
           - name: user-api
             paths:
               - /api/user
+      - name: inboud-service
+        url: http://inbound-service.wms.svc.cluster.local:3000
+        routes:
+          - name: inbound-api
+            paths:
+              - /api/inbound
+
     plugins:
       - name: jwt
+        service: outbound-service
         config:
           key_claim_name: "iss"
           secret_is_base64: false

@@ -20,46 +20,23 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
-            - containerPort: 1041
+            - containerPort: {{ .Values.service.port }}
           env:
             - name: SERVER_PORT
-              valueFrom:
-                secretKeyRef:
-                  name: user-service-secret
-                  key: SERVER_PORT
+              value: "{{ .Values.env.SERVER_PORT }}"
             - name: DB_URL
-              valueFrom:
-                secretKeyRef:
-                  name: user-service-secret
-                  key: DB_URL
+              value: "{{ .Values.env.DB_URL }}"
             - name: DB_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: user-service-secret
-                  key: DB_USERNAME
+              value: "{{ .Values.env.DB_USERNAME }}"
             - name: DB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: user-service-secret
-                  key: DB_PASSWORD
+              value: "{{ .Values.env.DB_PASSWORD }}"
             - name: DB_DRIVER
-              valueFrom:
-                secretKeyRef:
-                  name: user-service-secret
-                  key: DB_DRIVER
-            - name: REDIS_HOST
-              valueFrom:
-                secretKeyRef:
-                  name: user-service-secret
-                  key: REDIS_HOST
-            - name: REDIS_PORT
-              valueFrom:
-                secretKeyRef:
-                  name: user-service-secret
-                  key: REDIS_PORT
+              value: "{{ .Values.env.DB_DRIVER }}"
 
+            - name: REDIS_CLUSTER_NODES
+              value: "{{ .Values.env.REDIS_CLUSTER_NODES }}"
+            - name: REDIS_PORT
+              value: "{{ .Values.env.REDIS_PORT }}"
             - name: REDIS_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: user-service-secret
-                  key: REDIS_PASSWORD
+              value: "{{ .Values.env.REDIS_PASSWORD }}"
+
