@@ -25,11 +25,9 @@ spec:
               value: "hp9u/VlhO9LrdrLi64W/hJFQVEunkNJ6VFBxglV7"
             - name: AWS_DEFAULT_REGION
               value: "us-east-1"
-
           securityContext:
             runAsUser: 0  # root 사용자로 실행 (권한 문제 해결)
             runAsGroup: 0  # root 그룹으로 실행
-
           volumeMounts:
             - name: config-volume
               mountPath: /etc/fluent-bit/fluent-bit.conf
@@ -39,16 +37,8 @@ spec:
               mountPath: /etc/fluent-bit/filter.lua
               subPath: filter.lua
 
-            - name: filter-out-lua-volume
-              mountPath: /etc/fluent-bit/outbound_filter.lua
-              subPath: outbound_filter.lua
-
             - name: inventory-log
               mountPath: /helm-charts/monitoring/log
-
-            - name: outbound-log
-              mountPath: /helm-charts/monitoring/log
-
           command: ["/fluent-bit/bin/fluent-bit"]
           args:
             - -c
@@ -68,19 +58,7 @@ spec:
               - key: filter.lua
                 path: filter.lua
 
-        - name: filter-out-lua-volume
-          configMap:
-            name: fluent-bit-config
-            items:
-              - key: outbound_filter.lua
-                path: outbound_filter.lua
-
         - name: inventory-log
-          hostPath:
-            path: /helm-charts/monitoring/log
-            type: DirectoryOrCreate
-
-        - name: outbound-log
           hostPath:
             path: /helm-charts/monitoring/log
             type: DirectoryOrCreate

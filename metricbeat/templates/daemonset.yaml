@@ -3,48 +3,43 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: {{ template "metricbeat.fullname" . }}
+  name: metricbeat-metricbeat
   labels:
-    app: "{{ template "metricbeat.fullname" . }}"
-    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    heritage: {{ .Release.Service | quote }}
-    release: {{ .Release.Name | quote }}
+    app: "metricbeat-metricbeat"
+    chart: "metricbeat-8.5.1"
+    heritage: "Helm"
+    release: "metricbeat"
 spec:
   selector:
     matchLabels:
-      app: "{{ template "metricbeat.fullname" . }}"
-      release: {{ .Release.Name | quote }}
+      app: "metricbeat-metricbeat"
+      release: "metricbeat"
   updateStrategy:
-    type: {{ .Values.updateStrategy }}
+    type: {{ .Values.updateStrategy | default "RollingUpdate" }}
   template:
     metadata:
       annotations:
-        {{- range $key, $value := .Values.podAnnotations }}
-        {{ $key }}: {{ $value | quote }}
-        {{- end }}
-        {{- if or  .Values.metricbeatConfig .Values.daemonset.metricbeatConfig }}
         configChecksum: {{ include (print .Template.BasePath "/configmap.yaml") . | sha256sum | trunc 63 }}
-        {{- end }}
-      name: "{{ template "metricbeat.fullname" . }}"
+      name: "metricbeat-metricbeat"
       labels:
-        app: "{{ template "metricbeat.fullname" . }}"
-        chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-        heritage: {{ .Release.Service | quote }}
-        release: {{ .Release.Name | quote }}
+        app: "metricbeat-metricbeat"
+        chart: "metricbeat-8.5.1"
+        heritage: "Helm"
+        release: "metricbeat"
     spec:
-      affinity: {{ toYaml ( .Values.affinity | default .Values.daemonset.affinity ) | nindent 8 }}
-      nodeSelector: {{ toYaml ( .Values.nodeSelector | default .Values.daemonset.nodeSelector ) | nindent 8 }}
-      tolerations: {{ toYaml ( .Values.tolerations | default .Values.daemonset.tolerations ) | nindent 8 }}
-      serviceAccountName: {{ template "metricbeat.serviceAccount" . }}
-      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriod }}
+      affinity: {{ toYaml .Values.affinity | default "{}" | nindent 8 }}
+      nodeSelector: {{ toYaml .Values.nodeSelector | default "{}" | nindent 8 }}
+      tolerations: {{ toYaml .Values.tolerations | default "[]" | nindent 8 }}
+      serviceAccountName: metricbeat
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriod | default 30 }}
 
       volumes:
         - name: metricbeat-config
           configMap:
             defaultMode: 0644
-            name: {{ template "metricbeat.fullname" . }}-config
+            name: metricbeat-metricbeat-config
         - name: data
-          emptyDir: {}  # <--- 변경된 부분 (중요!)
+          emptyDir: {}  # ✅ 데이터 저장을 위한 emptyDir 볼륨 유지
         - name: varrundockersock
           hostPath:
             path: /var/run/docker.sock
@@ -54,9 +49,6 @@ spec:
         - name: cgroup
           hostPath:
             path: /sys/fs/cgroup
-        {{- if .Values.extraVolumes | default .Values.daemonset.extraVolumes }}
-{{ toYaml ( .Values.extraVolumes | default .Values.daemonset.extraVolumes ) | indent 8 }}
-        {{- end }}
 
       containers:
         - name: "metricbeat"
@@ -67,11 +59,30 @@ spec:
             - "-E"
             - "http.enabled=true"
             - "--system.hostfs=/hostfs"
+            - "-E"
+            - "metricbeat.modules.2.hosts=$(NODE_IP):10250"
           livenessProbe:
-{{ toYaml .Values.livenessProbe | indent 12 }}
+            exec:
+              command:
+              - sh
+              - -c
+              - |
+                #!/usr/bin/env bash -e
+                metricbeat test output
+            initialDelaySeconds: 30
+            periodSeconds: 30
           readinessProbe:
-{{ toYaml .Values.readinessProbe | indent 12 }}
-          resources: {{ toYaml ( .Values.resources | default .Values.daemonset.resources ) | nindent 12 }}
+            exec:
+              command:
+              - sh
+              - -c
+              - |
+                #!/usr/bin/env bash -e
+                metricbeat test output
+            initialDelaySeconds: 20
+            periodSeconds: 30
+          resources: {{ toYaml .Values.resources | default "{}" | nindent 12 }}
+
           env:
             - name: POD_NAMESPACE
               valueFrom:
@@ -81,11 +92,19 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-{{- if .Values.extraEnvs | default .Values.daemonset.extraEnvs }}
-{{ toYaml ( .Values.extraEnvs | default .Values.daemonset.extraEnvs ) | indent 12 }}
-{{- end }}
-          envFrom: {{ toYaml ( .Values.envFrom | default .Values.daemonset.envFrom ) | nindent 12 }}
-          securityContext: {{ toYaml ( .Values.podSecurityContext | default .Values.daemonset.securityContext ) | nindent 12 }}
+            - name: NODE_IP  # ✅ Kubernetes에서 해당 Pod가 실행 중인 노드의 IP를 가져옴
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+
+          envFrom: {{ toYaml .Values.envFrom | default "[]" | nindent 12 }}
+
+          securityContext:
+            runAsUser: 0
+            privileged: false
+            runAsGroup: 0
+            fsGroup: 0
+
           volumeMounts:
             - name: metricbeat-config
               mountPath: /usr/share/metricbeat/metricbeat.yml
@@ -102,8 +121,4 @@ spec:
             - name: cgroup
               mountPath: /hostfs/sys/fs/cgroup
               readOnly: true
-          {{- if .Values.extraVolumeMounts | default .Values.daemonset.extraVolumeMounts }}
-{{ toYaml ( .Values.extraVolumeMounts | default .Values.daemonset.extraVolumeMounts ) | indent 12 }}
-          {{- end }}
 {{- end }}
-

@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: chamchimayo/inventory-service
-  tag: "v1.0.10"
+  tag: "latest"
   pullPolicy: IfNotPresent
 
 service:
@@ -23,4 +23,12 @@ env:
   SPRING_KAFKA_CONSUMER_KEY_DESERIALIZER: "org.apache.kafka.common.serialization.StringDeserializer"
   SPRING_KAFKA_CONSUMER_VALUE_DESERIALIZER: "org.springframework.kafka.support.serializer.JsonDeserializer"
   SPRING_KAFKA_CONSUMER_PROPERTIES_SPRING_JSON_TRUSTED_PACKAGES: "*"
+
+  # Kafka Producer 설정 추가
+  SPRING_KAFKA_PRODUCER_KEY_SERIALIZER: "org.apache.kafka.common.serialization.StringSerializer"
+  SPRING_KAFKA_PRODUCER_VALUE_SERIALIZER: "org.springframework.kafka.support.serializer.JsonSerializer"
+
+  SPRING_KAFKA_TOPIC_INVENTORY_UPDATED: "inventory-updated"
+  SPRING_KAFKA_TOPIC_INBOUND_CONFIRMED: "inbound-confirmed-0"
+  SPRING_KAFKA_PRODUCER_ACKS: "all"
 

@@ -1,0 +1,14 @@
+# clusterrolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: metricbeat-cluster-reader-binding
+subjects:
+  - kind: ServiceAccount
+    name: metricbeat
+    namespace: metricbeat  # metricbeat 네임스페이스에 맞게 설정
+roleRef:
+  kind: ClusterRole
+  name: metricbeat-cluster-reader
+  apiGroup: rbac.authorization.k8s.io
+

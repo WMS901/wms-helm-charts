@@ -2,18 +2,20 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: {{ template "metricbeat.serviceAccount" . }}-role-binding
+  name: {{ .Values.serviceAccount }}-role-binding  # 서비스 계정에 맞는 바인딩 이름
   labels:
     app: "{{ template "metricbeat.fullname" . }}"
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     heritage: {{ .Release.Service | quote }}
     release: {{ .Release.Name | quote }}
 roleRef:
-  kind: ClusterRole
-  name: {{ template "metricbeat.serviceAccount" . }}-role
+  kind: ClusterRole  # ClusterRole을 참조
+  name: {{ .Values.serviceAccount }}-cluster-role  # 서비스 계정에 맞는 ClusterRole 이름
   apiGroup: rbac.authorization.k8s.io
 subjects:
-- kind: ServiceAccount
-  name: {{ template "metricbeat.serviceAccount" . }}
-  namespace: {{ .Release.Namespace }}
-{{- end -}}
+  - kind: ServiceAccount
+    name: {{ .Values.serviceAccount }}  # 서비스 계정 이름을 사용
+    namespace: {{ .Release.Namespace }}  # metricbeat 네임스페이스 지정
+
+{{- end }}
+

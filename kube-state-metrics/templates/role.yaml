@@ -1,0 +1,24 @@
+# templates/role.yaml
+
+{{- if and (eq $.Values.rbac.create true) (not $.Values.rbac.useExistingRole) -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: {{ template "kube-state-metrics.name" $ }}
+    helm.sh/chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
+    app.kubernetes.io/managed-by: {{ $.Release.Service }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+  name: {{ template "kube-state-metrics.fullname" $ }}
+rules:
+  {{ if or .Values.extraArgs }}
+  - apiGroups: [""]
+    resources:
+      - nodes
+      - pods
+      - services
+      - deployments
+    verbs: ["list", "watch"]
+  {{ end -}}
+{{- end }}
+

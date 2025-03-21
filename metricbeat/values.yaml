@@ -1,8 +1,19 @@
 daemonset:
   enabled: true
+  env:
+    - name: NODE_IP
+      valueFrom:
+        fieldRef:
+          fieldPath: status.hostIP
 
 deployment:
   enabled: false
+
+setup:
+  dashboards:
+    enabled: true
+  kibana:
+    host: "http://195.168.9.237:5601"
 
 metricbeatConfig:
   metricbeat.yml: |
@@ -23,9 +34,10 @@ metricbeatConfig:
           - state_pod
           - state_container
         period: 10s
-        hosts: ["kube-state-metrics:8080"]
+        hosts: ["http://kube-state-metrics.metricbeat.svc.cluster.local:8080"]
+        namespace: "metricbeat"
         bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-        ssl.verification_mode: "none"
+        add_metadata: true
 
       - module: system
         enabled: true
@@ -42,6 +54,21 @@ metricbeatConfig:
         process.include_top_n:
           by_cpu: 5
           by_memory: 5
+
+      - module: kubernetes
+        enabled: true
+        metricsets:
+          - node
+          - pod
+          - container
+          - system
+          - volume
+        period: 10s
+        hosts: ["https://${NODE_IP}:10250"]  # ✅ IP 기반 접근 유지
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        ssl.verification_mode: "none"
+        insecure: true  # ✅ Kubelet API 접근 가능하도록 추가
+        add_metadata: true
 
     processors:
       - add_fields:
@@ -70,7 +97,36 @@ resources:
     memory: "512Mi"
 
 managedServiceAccount: true
-serviceAccount: ""
+serviceAccount: "metricbeat"
+
+rbac:
+  create: true  # RBAC 정책을 생성할지 여부
+  clusterRole:
+    create: true  # `ClusterRole` 생성 여부
+    rules:
+      - apiGroups: [""]
+        resources:
+          - pods
+          - services
+          - persistentvolumes
+          - persistentvolumeclaims
+          - replicationcontrollers
+          - resourcequotas
+          - secrets
+          - configmaps
+          - deployments
+          - replicasets
+          - namespaces
+        verbs:
+          - list
+          - get
+          - watch
+  clusterRoleBinding:
+    create: true  # `ClusterRoleBinding` 생성 여부
+    subjects:
+      - kind: ServiceAccount
+        name: metricbeat
+        namespace: metricbeat  # 서비스 계정이 존재하는 네임스페이스
 
 image: "docker.elastic.co/beats/metricbeat"
 imageTag: "8.5.1"
@@ -105,19 +161,49 @@ clusterRoleRules:
       - namespaces
       - pods
       - events
+      - nodes/stats   # ✅ 추가
+      - nodes/metrics  # ✅ 추가
+      - nodes/proxy   # ✅ 추가
+      - nodes/log
+      - pods/log
+      - configmaps        # 추가
+      - secrets           # 추가
+      - daemonsets.apps   # 추가
+      - limitranges        # 추가
+      - leases.coordination.k8s.io  # 추가
+      - volumeattachments.storage.k8s.io # 추가
     verbs: ["get", "list", "watch"]
+
   - apiGroups: ["apps"]
     resources:
       - deployments
       - replicasets
       - statefulsets
+      - daemonsets         # 추가
     verbs: ["get", "list", "watch"]
+
   - apiGroups: ["batch"]
     resources:
       - jobs
       - cronjobs
     verbs: ["get", "list", "watch"]
 
-kube_state_metrics:
-  enabled: true
+  - apiGroups: ["metrics.k8s.io"]
+    resources:
+      - nodes
+      - pods
+    verbs: ["get", "list", "watch"]
 
+  - apiGroups:
+    - autoscaling
+    resources:
+    - horizontalpodautoscalers
+    verbs:
+      - get
+      - list
+      - watch
+    versions: 
+      - "v2"
+
+kube_state_metrics:
+  enabled: false

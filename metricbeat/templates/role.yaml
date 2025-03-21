@@ -2,13 +2,51 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: {{ template "metricbeat.serviceAccount" . }}-role
+  name: {{ .Values.serviceAccount }}-role  # 서비스 계정에 맞는 역할 이름
   labels:
     app: "{{ template "metricbeat.fullname" . }}"
 rules:
-  - apiGroups:
-      - coordination.k8s.io
+  - apiGroups: [""]
     resources:
-      - leases
-    verbs: ["get", "create", "update"]
-{{- end -}}
+      - nodes
+      - namespaces
+      - pods
+      - events
+      - nodes/stats
+      - nodes/metrics
+      - nodes/proxy
+      - nodes/log
+      - pods/log
+    verbs: ["get", "list", "watch"]
+
+  - apiGroups: ["apps"]
+    resources:
+      - deployments
+      - replicasets
+      - statefulsets
+    verbs: ["get", "list", "watch"]
+
+  - apiGroups: ["batch"]
+    resources:
+      - jobs
+      - cronjobs
+    verbs: ["get", "list", "watch"]
+
+  - apiGroups: ["metrics.k8s.io"]
+    resources:
+      - nodes
+      - pods
+    verbs: ["get", "list", "watch"]
+
+  - apiGroups: ["autoscaling"]
+    resources:
+      - horizontalpodautoscalers
+    verbs:
+      - get
+      - list
+      - watch
+    versions:
+      - "v2"
+
+{{- end }}
+

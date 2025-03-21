@@ -1,0 +1,76 @@
+# values.yaml
+
+prometheusScrape: true
+
+image:
+  repository: k8s.gcr.io/kube-state-metrics/kube-state-metrics
+  tag: v2.15.0
+  pullPolicy: IfNotPresent
+
+autosharding:
+  enabled: false
+
+replicas: 1
+
+extraArgs:
+  - "--resources=certificatesigningrequests,configmaps,cronjobs,daemonsets,deployments,endpoints,horizontalpodautoscalers,ingresses,jobs,leases,limitranges,mutatingwebhookconfigurations,namespaces,networkpolicies,nodes,persistentvolumeclaims,persistentvolumes,poddisruptionbudgets,pods,replicasets,replicationcontrollers,resourcequotas,secrets,services,statefulsets,storageclasses,validatingwebhookconfigurations,volumeattachments"
+  - "--metric-allowlist=pods,deployments,replicasets,daemonsets,statefulsets,services"
+
+service:
+  port: 8080
+  type: ClusterIP
+  nodePort: 0
+  loadBalancerIP: ""
+  annotations: {}
+
+hostNetwork: false
+
+rbac:
+  create: false
+  useClusterRole: true
+  useExistingRole: "metricbeat-cluster-role"  # 이미 존재하는 ClusterRole을 사용
+
+serviceAccount:
+  create: false  # 서비스 계정 생성하지 않음, 기존 서비스 계정 사용
+  name: "metricbeat"  # 기존 서비스 계정 사용
+  imagePullSecrets: []
+  annotations: {}
+
+prometheus:
+  monitor:
+    enabled: false
+    additionalLabels: {}
+    namespace: ""
+    honorLabels: false
+
+resources: {}
+
+kube_state_metrics:
+  enabled: false
+
+podSecurityPolicy:
+  enabled: false  # PSP 기능 비활성화
+
+securityContext:
+  enabled: true
+  runAsGroup: 65534
+  runAsUser: 65534
+  fsGroup: 65534
+
+selfMonitor:
+  enabled: false  # selfMonitor 기능을 비활성화
+
+kubeconfig:
+  enabled: false  # kubeconfig 기능 비활성화
+
+nodeSelector: {}
+affinity: {}
+tolerations: []
+
+podAnnotations: {}
+
+priorityClassName: ""
+
+podDisruptionBudget: {}
+
+kubeTargetVersionOverride: ""
