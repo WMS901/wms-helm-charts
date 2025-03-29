@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: chamchimayo/inventory-service
-  tag: "latest"
+  tag: "v1.0.30"
   pullPolicy: IfNotPresent
 
 service:
