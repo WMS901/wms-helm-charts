@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: chamchimayo/inbound-service
-  tag: "v10.0.4"
+  tag: "v10.0.5"
   pullPolicy: IfNotPresent
 
 service:
