@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluent-bit
+  namespace: {{ .Values.namespace }}
+spec:
+  selector:
+    matchLabels:
+      app: fluent-bit
+  template:
+    metadata:
+      labels:
+        app: fluent-bit
+    spec:
+      serviceAccountName: monitoring
+      containers:
+        - name: fluent-bit
+          image: amazon/aws-for-fluent-bit:latest
+          env:
+            - name: AWS_ACCESS_KEY_ID
+              value: {{ .Values.aws.accessKeyId }}
+            - name: AWS_SECRET_ACCESS_KEY
+              value: {{ .Values.aws.secretAccessKey }}
+            - name: AWS_DEFAULT_REGION
+              value: {{ .Values.aws.region }}
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/fluent-bit/fluent-bit.conf
+              subPath: fluent-bit.conf
+            {{- range .Values.logs }}
+            - name: {{ .name }}-filter
+              mountPath: /etc/fluent-bit/{{ .filterScript }}
+              subPath: {{ .filterScript }}
+            - name: {{ .name }}-log
+              mountPath: {{ .path | dir }}
+            {{- end }}
+          command: ["/fluent-bit/bin/fluent-bit"]
+          args: ["-c", "/etc/fluent-bit/fluent-bit.conf"]
+      volumes:
+        - name: config-volume
+          configMap:
+            name: fluent-bit-config
+            items:
+              - key: fluent-bit.conf
+                path: fluent-bit.conf
+        {{- range .Values.logs }}
+        - name: {{ .name }}-filter
+          configMap:
+            name: fluent-bit-config
+            items:
+              - key: {{ .filterScript }}
+                path: {{ .filterScript }}
+        - name: {{ .name }}-log
+          hostPath:
+            path: {{ .path | dir }}
+            type: DirectoryOrCreate
+        {{- end }}
+

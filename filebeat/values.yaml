@@ -1,9 +1,9 @@
 ---
+hostPathRoot: /var/lib  # ✅ Filebeat data volume 저장 경로 설정
+
 daemonset:
-  # DaemonSet을 활성화하여 모든 노드에 Filebeat를 배포
   enabled: true
 
-  # 환경 변수 설정 (Elasticsearch와 연결하는 변수 설정)
   extraEnvs:
 #    - name: "ELASTICSEARCH_USERNAME"
 #      valueFrom:
@@ -16,65 +16,64 @@ daemonset:
 #          name: elasticsearch-master-credentials
 #          key: password
 
-  # Filebeat 설정 파일 (/usr/share/filebeat/filebeat.yml 설정)
   filebeatConfig:
     filebeat.yml: |
-      filebeat.inputs:
-      - type: container
-        paths:
-          - /var/log/containers/*.log  # Kubernetes에서 컨테이너 로그 파일 경로
-        fields:
-          beat_type: filebeat
-        processors:
+      filebeat.autodiscover:
+        providers:
+          - type: kubernetes
+            node: ${NODE_NAME}
+            hints.enabled: true
+            hints.default_config:
+              type: container
+              paths:
+                - /var/log/containers/*${data.kubernetes.container.id}.log
+
+      processors:
+        - add_cloud_metadata: ~
+        - add_host_metadata: ~
         - add_kubernetes_metadata:
-            host: ${NODE_NAME}  # Kubernetes 노드 정보 추가
+            host: ${NODE_NAME}
             matchers:
-            - logs_path:
-                logs_path: "/var/log/containers/"  # 로그 경로 설정
+              - logs_path:
+                  logs_path: "/var/log/containers/"
 
-      # 로그를 Logstash로 전송하는 설정
+      filebeat.modules:
+        - module: system
+          syslog:
+            enabled: true
+          auth:
+            enabled: true
+
       output.logstash:
-        hosts: ['195.168.9.181:5044']  # Logstash의 IP와 포트 설정 (변경 필요)
-       # username: 'elastic'  # Elasticsearch와의 연결을 위한 환경변수 (필요시)
-       # password: 'soldesk'  # Elasticsearch와의 연결을 위한 환경변수 (필요시)
-        # SSL 관련 설정을 제거했습니다.
-        # ssl:
-        #   certificate_authorities: ["/usr/share/filebeat/certs/ca.crt"]  # SSL 인증서 경로 제거
+        hosts: ['195.168.9.181:5044']
 
-  # 보안 설정
   securityContext:
-    runAsUser: 0  # 루트 사용자로 실행
-    privileged: false  # 특권 모드 비활성화
+    runAsUser: 0
+    privileged: false
 
-  # 리소스 요청 및 제한 설정
   resources:
     requests:
       cpu: "100m"
       memory: "100Mi"
     limits:
       cpu: "1000m"
-      memory: "200Mi"
+      memory: "512Mi"
 
-  tolerations: []  # Kubernetes에 대한 유연성 설정 (필요시)
+  tolerations: []
 
-# Deployment 옵션을 사용하지 않음
 deployment:
   enabled: false
 
-# 서비스 어카운트 및 권한 설정
-managedServiceAccount: true  # Filebeat를 위한 서비스 어카운트 관리
-serviceAccount: ""  # 기본 서비스 어카운트 사용
+managedServiceAccount: true
+serviceAccount: ""
 
-# Pod 종료 대기 시간 설정
 terminationGracePeriod: 30
 
-# Filebeat 이미지를 사용하는 경우
-image: "docker.elastic.co/beats/filebeat"  # Filebeat Docker 이미지
-imageTag: "8.5.1"  # Filebeat 버전
-imagePullPolicy: "IfNotPresent"  # 이미지 풀 정책 설정
-imagePullSecrets: []  # 이미지 풀 비밀키 설정 (필요시)
+image: "docker.elastic.co/beats/filebeat"
+imageTag: "8.5.1"
+imagePullPolicy: "IfNotPresent"
+imagePullSecrets: []
 
-# Liveness Probe 설정 (Filebeat 프로세스가 살아 있는지 확인)
 livenessProbe:
   exec:
     command:
@@ -88,7 +87,6 @@ livenessProbe:
   periodSeconds: 10
   timeoutSeconds: 5
 
-# Readiness Probe 설정 (Filebeat이 준비되었는지 확인)
 readinessProbe:
   exec:
     command:
@@ -102,7 +100,6 @@ readinessProbe:
   periodSeconds: 10
   timeoutSeconds: 5
 
-# 클러스터 역할 및 권한 설정 (Kubernetes 리소스에 접근하기 위한 권한 설정)
 clusterRoleRules:
   - apiGroups:
       - ""
@@ -123,19 +120,12 @@ clusterRoleRules:
       - list
       - watch
 
-# Pod에 대한 주석 및 추가 설정
 podAnnotations: {}
-
-# 서비스 어카운트에 대한 주석 설정 (필요시)
 serviceAccountAnnotations: {}
-
-# Pod 우선순위 클래스 설정 (필요시)
 priorityClassName: ""
 
-# Filebeat 업데이트 전략 설정
 updateStrategy: RollingUpdate
 
-# 파일 비트의 이름 및 전체 이름을 재정의하려면 이 항목을 설정하세요
 nameOverride: ""
 fullnameOverride: ""
 

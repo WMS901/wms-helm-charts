@@ -1,0 +1,20 @@
+namespace: amazon-cloudwatch
+aws:
+  region: us-east-1
+  accessKeyId: YOUR_AWS_ACCESS_KEY
+  secretAccessKey: YOUR_AWS_SECRET_KEY
+
+logs:
+  - name: inventory
+    path: /helm-charts/monitoring/log/inventory-service.log
+    tag: text
+    filterScript: filter.lua
+    logGroup: inventory
+    streamPrefix: fix
+  - name: outbound
+    path: /helm-charts/monitoring/log/outbound-service.log
+    tag: file
+    filterScript: outbound_filter.lua
+    logGroup: outbound
+    streamPrefix: out
+

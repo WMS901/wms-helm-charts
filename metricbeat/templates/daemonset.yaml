@@ -49,6 +49,15 @@ spec:
         - name: cgroup
           hostPath:
             path: /sys/fs/cgroup
+        - name: sys
+          hostPath:
+            path: /sys
+        - name: dev
+          hostPath:
+            path: /dev
+        - name: hostfs
+          hostPath:
+            path: /
 
       containers:
         - name: "metricbeat"
@@ -59,8 +68,6 @@ spec:
             - "-E"
             - "http.enabled=true"
             - "--system.hostfs=/hostfs"
-            - "-E"
-            - "metricbeat.modules.2.hosts=$(NODE_IP):10250"
           livenessProbe:
             exec:
               command:
@@ -120,5 +127,14 @@ spec:
               readOnly: true
             - name: cgroup
               mountPath: /hostfs/sys/fs/cgroup
+              readOnly: true
+            - name: sys
+              mountPath: /hostfs/sys/
+              readOnly: true
+            - name: dev
+              mountPath: /hostfs/dev
+              readOnly: true
+            - name: hostfs
+              mountPath: /hostfs
               readOnly: true
 {{- end }}

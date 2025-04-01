@@ -9,6 +9,8 @@ daemonset:
 deployment:
   enabled: false
 
+automountServiceAccountToken: true
+
 setup:
   dashboards:
     enabled: true
@@ -18,15 +20,10 @@ setup:
 metricbeatConfig:
   metricbeat.yml: |
     metricbeat.modules:
+      # kube-state-metrics 기반 수집
       - module: kubernetes
         enabled: true
         metricsets:
-          - node
-          - system
-          - pod
-          - container
-          - volume
-          - event
           - state_node
           - state_deployment
           - state_replicaset
@@ -35,10 +32,25 @@ metricbeatConfig:
           - state_container
         period: 10s
         hosts: ["http://kube-state-metrics.metricbeat.svc.cluster.local:8080"]
-        namespace: "metricbeat"
         bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
         add_metadata: true
 
+      # Kubelet 기반 수집 (node, pod, container 등)
+      - module: kubernetes
+        enabled: true
+        metricsets:
+          - node
+          - pod
+          - container
+          - volume
+          - system
+        period: 10s
+        hosts: ["https://${NODE_IP}:10250"]
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        ssl.verification_mode: "none"
+        add_metadata: true
+
+      # 시스템 메트릭
       - module: system
         enabled: true
         period: 10s
@@ -50,25 +62,11 @@ metricbeatConfig:
           - process
           - process_summary
           - uptime
+          - diskio
         processes: ['.*']
         process.include_top_n:
           by_cpu: 5
           by_memory: 5
-
-      - module: kubernetes
-        enabled: true
-        metricsets:
-          - node
-          - pod
-          - container
-          - system
-          - volume
-        period: 10s
-        hosts: ["https://${NODE_IP}:10250"]  # ✅ IP 기반 접근 유지
-        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-        ssl.verification_mode: "none"
-        insecure: true  # ✅ Kubelet API 접근 가능하도록 추가
-        add_metadata: true
 
     processors:
       - add_fields:
@@ -84,8 +82,10 @@ elasticsearch:
 
 securityContext:
   runAsUser: 0
-  privileged: false
   runAsGroup: 0
+  privileged: true
+
+podSecurityContext:
   fsGroup: 0
 
 resources:
@@ -100,33 +100,84 @@ managedServiceAccount: true
 serviceAccount: "metricbeat"
 
 rbac:
-  create: true  # RBAC 정책을 생성할지 여부
+  create: true
   clusterRole:
-    create: true  # `ClusterRole` 생성 여부
-    rules:
-      - apiGroups: [""]
-        resources:
-          - pods
-          - services
-          - persistentvolumes
-          - persistentvolumeclaims
-          - replicationcontrollers
-          - resourcequotas
-          - secrets
-          - configmaps
-          - deployments
-          - replicasets
-          - namespaces
-        verbs:
-          - list
-          - get
-          - watch
+    create: true
   clusterRoleBinding:
-    create: true  # `ClusterRoleBinding` 생성 여부
+    create: true
     subjects:
       - kind: ServiceAccount
         name: metricbeat
-        namespace: metricbeat  # 서비스 계정이 존재하는 네임스페이스
+        namespace: metricbeat
+
+clusterRoleRules:
+  - apiGroups: [""]
+    resources:
+      - nodes
+      - namespaces
+      - pods
+      - events
+      - nodes/stats
+      - nodes/metrics
+      - nodes/proxy
+      - nodes/log
+      - pods/log
+      - configmaps
+      - secrets
+      - persistentvolumes
+      - persistentvolumeclaims
+      - replicationcontrollers
+      - resourcequotas
+      - services
+      - limitranges
+    verbs: ["get", "list", "watch"]
+
+  - apiGroups: ["apps"]
+    resources:
+      - deployments
+      - replicasets
+      - statefulsets
+      - daemonsets
+    verbs: ["get", "list", "watch"]
+
+  - apiGroups: ["batch"]
+    resources:
+      - jobs
+      - cronjobs
+    verbs: ["get", "list", "watch"]
+
+  - apiGroups: ["coordination.k8s.io"]
+    resources:
+      - leases
+    verbs: ["get", "list", "watch"]
+
+  - apiGroups: ["storage.k8s.io"]
+    resources:
+      - storageclasses
+      - volumeattachments
+    verbs: ["get", "list", "watch"]
+
+  - apiGroups: ["admissionregistration.k8s.io"]
+    resources:
+      - mutatingwebhookconfigurations
+      - validatingwebhookconfigurations
+    verbs: ["get", "list", "watch"]
+
+  - apiGroups: ["certificates.k8s.io"]
+    resources:
+      - certificatesigningrequests
+    verbs: ["get", "list", "watch"]
+
+  - apiGroups: ["metrics.k8s.io"]
+    resources:
+      - nodes
+      - pods
+    verbs: ["get", "list", "watch"]
+
+  - apiGroups: ["autoscaling"]
+    resources:
+      - horizontalpodautoscalers
+    verbs: ["get", "list", "watch"]
 
 image: "docker.elastic.co/beats/metricbeat"
 imageTag: "8.5.1"
@@ -154,56 +205,6 @@ readinessProbe:
   initialDelaySeconds: 20
   periodSeconds: 30
 
-clusterRoleRules:
-  - apiGroups: [""]
-    resources:
-      - nodes
-      - namespaces
-      - pods
-      - events
-      - nodes/stats   # ✅ 추가
-      - nodes/metrics  # ✅ 추가
-      - nodes/proxy   # ✅ 추가
-      - nodes/log
-      - pods/log
-      - configmaps        # 추가
-      - secrets           # 추가
-      - daemonsets.apps   # 추가
-      - limitranges        # 추가
-      - leases.coordination.k8s.io  # 추가
-      - volumeattachments.storage.k8s.io # 추가
-    verbs: ["get", "list", "watch"]
-
-  - apiGroups: ["apps"]
-    resources:
-      - deployments
-      - replicasets
-      - statefulsets
-      - daemonsets         # 추가
-    verbs: ["get", "list", "watch"]
-
-  - apiGroups: ["batch"]
-    resources:
-      - jobs
-      - cronjobs
-    verbs: ["get", "list", "watch"]
-
-  - apiGroups: ["metrics.k8s.io"]
-    resources:
-      - nodes
-      - pods
-    verbs: ["get", "list", "watch"]
-
-  - apiGroups:
-    - autoscaling
-    resources:
-    - horizontalpodautoscalers
-    verbs:
-      - get
-      - list
-      - watch
-    versions: 
-      - "v2"
-
 kube_state_metrics:
   enabled: false
+

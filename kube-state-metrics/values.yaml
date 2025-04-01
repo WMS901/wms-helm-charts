@@ -14,7 +14,7 @@ replicas: 1
 
 extraArgs:
   - "--resources=certificatesigningrequests,configmaps,cronjobs,daemonsets,deployments,endpoints,horizontalpodautoscalers,ingresses,jobs,leases,limitranges,mutatingwebhookconfigurations,namespaces,networkpolicies,nodes,persistentvolumeclaims,persistentvolumes,poddisruptionbudgets,pods,replicasets,replicationcontrollers,resourcequotas,secrets,services,statefulsets,storageclasses,validatingwebhookconfigurations,volumeattachments"
-  - "--metric-allowlist=pods,deployments,replicasets,daemonsets,statefulsets,services"
+  - "--metric-allowlist=.*"
 
 service:
   port: 8080
@@ -38,10 +38,7 @@ serviceAccount:
 
 prometheus:
   monitor:
-    enabled: false
-    additionalLabels: {}
-    namespace: ""
-    honorLabels: false
+    enabled: true
 
 resources: {}
 

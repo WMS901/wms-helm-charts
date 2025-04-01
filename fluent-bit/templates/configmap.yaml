@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluent-bit-config
+  namespace: {{ .Values.namespace }}
+data:
+  fluent-bit.conf: |
+    [SERVICE]
+        Flush        1
+        Log_Level    debug
+        Daemon       Off
+
+    {{- range .Values.logs }}
+    [INPUT]
+        Name              tail
+        Path              {{ .path }}
+        Tag               {{ .tag }}
+        Read_from_Head    false
+        Refresh_Interval  5
+        Rotate_Wait       60
+    {{- end }}
+
+    {{- range .Values.logs }}
+    [FILTER]
+        Name              lua
+        Match             {{ .tag }}
+        script            /etc/fluent-bit/{{ .filterScript }}
+        call              filter
+    {{- end }}
+
+    {{- range .Values.logs }}
+    [OUTPUT]
+        Name              cloudwatch_logs
+        Match             {{ .tag }}
+        region            {{ $.Values.aws.region }}
+        log_group_name    {{ .logGroup }}
+        log_stream_prefix {{ .streamPrefix }}
+        auto_create_group true
+    {{- end }}
+
+    [OUTPUT]
+        Name stdout
+        Match *
+  {{- range .Values.logs }}
+  {{ .filterScript }}: |
+{{ .Files.Get (print "files/" .filterScript) | indent 4 }}
+  {{- end }}
+
