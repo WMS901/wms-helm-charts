@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: chamchimayo/user-service
-  tag: "latest"
+  tag: "v0.0.15"
   pullPolicy: IfNotPresent
 
 service:
