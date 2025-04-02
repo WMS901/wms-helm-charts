@@ -29,8 +29,8 @@ data:
             paths:
               - /api/inbound
 
-    plugins:
-      - name: jwt
-        config:
-          key_claim_name: "iss"
-          secret_is_base64: false
+# plugins:
+#   - name: jwt
+#     config:
+#       key_claim_name: "iss"
+#       secret_is_base64: false
