@@ -34,4 +34,5 @@ spec:
               value: "{{ .Values.env.MONGO_DB }}"
             - name: MONGO_AUTH_DB
               value: "{{ .Values.env.MONGO_AUTH_DB }}"
-
+            - name: KAFKA_BROKERS
+              value: "{{ .Values.env.KAFKA_BROKERS }}"
