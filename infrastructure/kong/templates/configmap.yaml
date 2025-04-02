@@ -28,6 +28,7 @@ data:
           - name: inbound-api
             paths:
               - /api/inbound
+            strip_path: false 
 
 # plugins:
 #   - name: jwt
