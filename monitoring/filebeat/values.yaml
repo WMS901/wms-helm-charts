@@ -1,23 +1,13 @@
 ---
-hostPathRoot: /var/lib  # ✅ Filebeat data volume 저장 경로 설정
+hostPathRoot: /var/lib
 
 daemonset:
   enabled: true
-
   extraEnvs:
-#    - name: "ELASTICSEARCH_USERNAME"
-#      valueFrom:
-#        secretKeyRef:
-#          name: elasticsearch-master-credentials
-#          key: username
-#    - name: "ELASTICSEARCH_PASSWORD"
-#      valueFrom:
-#        secretKeyRef:
-#          name: elasticsearch-master-credentials
-#          key: password
-
   filebeatConfig:
     filebeat.yml: |
+      fields: 
+        beat_type: filebeat
       filebeat.autodiscover:
         providers:
           - type: kubernetes
@@ -27,7 +17,6 @@ daemonset:
               type: container
               paths:
                 - /var/log/containers/*${data.kubernetes.container.id}.log
-
       processors:
         - add_cloud_metadata: ~
         - add_host_metadata: ~
@@ -36,7 +25,6 @@ daemonset:
             matchers:
               - logs_path:
                   logs_path: "/var/log/containers/"
-
       filebeat.modules:
         - module: system
           syslog:
@@ -46,11 +34,9 @@ daemonset:
 
       output.logstash:
         hosts: ['195.168.9.181:5044']
-
   securityContext:
     runAsUser: 0
     privileged: false
-
   resources:
     requests:
       cpu: "100m"
@@ -58,15 +44,11 @@ daemonset:
     limits:
       cpu: "1000m"
       memory: "512Mi"
-
   tolerations: []
-
 deployment:
   enabled: false
-
 managedServiceAccount: true
 serviceAccount: ""
-
 terminationGracePeriod: 30
 
 image: "docker.elastic.co/beats/filebeat"

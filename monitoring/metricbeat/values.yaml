@@ -5,22 +5,17 @@ daemonset:
       valueFrom:
         fieldRef:
           fieldPath: status.hostIP
-
 deployment:
   enabled: false
-
 automountServiceAccountToken: true
-
 setup:
   dashboards:
     enabled: true
   kibana:
     host: "http://195.168.9.237:5601"
-
 metricbeatConfig:
   metricbeat.yml: |
     metricbeat.modules:
-      # kube-state-metrics 기반 수집
       - module: kubernetes
         enabled: true
         metricsets:
@@ -35,7 +30,6 @@ metricbeatConfig:
         bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
         add_metadata: true
 
-      # Kubelet 기반 수집 (node, pod, container 등)
       - module: kubernetes
         enabled: true
         metricsets:
@@ -50,7 +44,6 @@ metricbeatConfig:
         ssl.verification_mode: "none"
         add_metadata: true
 
-      # 시스템 메트릭
       - module: system
         enabled: true
         period: 10s
