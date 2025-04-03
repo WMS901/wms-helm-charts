@@ -34,4 +34,16 @@ spec:
               value: "{{ .Values.env.MONGO_DB }}"
             - name: MONGO_AUTH_DB
               value: "{{ .Values.env.MONGO_AUTH_DB }}"
-
+            # ✅ Kafka 환경변수 추가
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: "{{ .Values.env.SPRING_KAFKA_BOOTSTRAP_SERVERS }}"
+            - name: SPRING_KAFKA_CONSUMER_GROUP_ID
+              value: "{{ .Values.env.SPRING_KAFKA_CONSUMER_GROUP_ID }}"
+            - name: SPRING_KAFKA_CONSUMER_AUTO_OFFSET_RESET
+              value: "{{ .Values.env.SPRING_KAFKA_CONSUMER_AUTO_OFFSET_RESET }}"
+            - name: SPRING_KAFKA_CONSUMER_KEY_DESERIALIZER
+              value: "{{ .Values.env.SPRING_KAFKA_CONSUMER_KEY_DESERIALIZER }}"
+            - name: SPRING_KAFKA_CONSUMER_VALUE_DESERIALIZER
+              value: "{{ .Values.env.SPRING_KAFKA_CONSUMER_VALUE_DESERIALIZER }}"
+            - name: SPRING_KAFKA_CONSUMER_PROPERTIES_SPRING_JSON_TRUSTED_PACKAGES
+              value: "{{ .Values.env.SPRING_KAFKA_CONSUMER_PROPERTIES_SPRING_JSON_TRUSTED_PACKAGES }}"
