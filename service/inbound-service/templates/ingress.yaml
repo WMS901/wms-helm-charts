@@ -4,17 +4,26 @@ metadata:
   name: inbound-kong-ingress
   namespace: wms
   annotations:
-    kubernetes.io/ingress.class: "kong"  # Kong Ingress Controller로 처리
-    konghq.com/strip-path: "true"        # /api/inbound → / 내부 서비스로 전달
+     nginx.ingress.kubernetes.io/enable-cors: "true"
+     nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+     nginx.ingress.kubernetes.io/ssl-redirect: "true"
+     nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, OPTIONS"
+     nginx.ingress.kubernetes.io/cors-allow-headers: "Authorization, Content-Type"
+     nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
 spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+      - api.sol-wms.store
+    secretName: letsencrypt-cert
   rules:
-    - host: api.sol-wms.store
-      http:
-        paths:
-          - path: /api/inbound
-            pathType: Prefix
-            backend:
-              service:
-                name: {{ .Release.Name }}
-                port:
-                  number: {{ .Values.service.port }}
+  - host: api.sol-wms.store
+    http:
+      paths:
+      - path: /api/inbound
+        pathType: Prefix
+        backend:
+          service:
+            name: inbound-service
+            port:
+              number: 1050
